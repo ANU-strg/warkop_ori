@@ -15,6 +15,7 @@ class CartController extends Controller
         $request->validate([
             'menu_id' => 'required|exists:menus,id',
             'quantity' => 'required|integer|min:1',
+            'notes' => 'nullable|string|max:500',
         ]);
 
         $menu = Menu::findOrFail($request->menu_id);
@@ -30,6 +31,10 @@ class CartController extends Controller
         // If item already in cart, update quantity
         if (isset($cart[$menu->id])) {
             $cart[$menu->id]['quantity'] += $request->quantity;
+            // Update notes if provided
+            if ($request->filled('notes')) {
+                $cart[$menu->id]['notes'] = $request->notes;
+            }
         } else {
             // Add new item to cart
             $cart[$menu->id] = [
@@ -38,6 +43,7 @@ class CartController extends Controller
                 'price' => $menu->price,
                 'quantity' => $request->quantity,
                 'image_path' => $menu->image_path,
+                'notes' => $request->notes ?? null,
             ];
         }
 
