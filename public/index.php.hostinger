@@ -1,0 +1,28 @@
+<?php
+
+use Illuminate\Http\Request;
+
+define('LARAVEL_START', microtime(true));
+
+/**
+ * HOSTINGER SHARED HOSTING CONFIGURATION
+ * 
+ * Struktur folder:
+ * /home/username/laravel_app/          ← Laravel files
+ * /home/username/domains/domain.com/public_html/  ← File ini (public folder)
+ */
+
+// Path ke folder Laravel (sesuaikan dengan struktur Hostinger Anda)
+$laravelPath = '/home/u123456789/laravel_app';
+
+// Determine if the application is in maintenance mode...
+if (file_exists($maintenance = $laravelPath.'/storage/framework/maintenance.php')) {
+    require $maintenance;
+}
+
+// Register the Composer autoloader...
+require $laravelPath.'/vendor/autoload.php';
+
+// Bootstrap Laravel and handle the request...
+(require_once $laravelPath.'/bootstrap/app.php')
+    ->handleRequest(Request::capture());

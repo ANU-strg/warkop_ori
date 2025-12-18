@@ -17,3 +17,22 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+
+# Compiled views (auto-generated)
+/storage/framework/views/*.php
+
+# Test/Debug files
+test_*.php
+show_*.php
+regenerate_*.php
+clean_*.php
+*.backup
+
+# Backup and archive files
+*.zip
+halo/
+halo.zip
+
+# Development files
+*.log
+.vite/
