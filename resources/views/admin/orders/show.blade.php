@@ -34,6 +34,14 @@
                                 <h4 class="font-semibold text-gray-800">{{ $item->menu->name }}</h4>
                                 <p class="text-sm text-gray-600">{{ $item->menu->category->name }}</p>
                                 <p class="text-sm text-gray-500">Rp {{ number_format($item->price, 0, ',', '.') }} x {{ $item->quantity }}</p>
+                                @if($item->notes)
+                                    <div class="mt-2 bg-yellow-50 border border-yellow-200 rounded p-2">
+                                        <p class="text-xs text-gray-700">
+                                            <span class="font-semibold text-yellow-800">📝 Note:</span> 
+                                            <span class="text-gray-800">{{ $item->notes }}</span>
+                                        </p>
+                                    </div>
+                                @endif
                             </div>
                             
                             <div class="text-right">

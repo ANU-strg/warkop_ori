@@ -85,6 +85,7 @@ class CheckoutController extends Controller
                 'quantity' => $item['quantity'],
                 'price' => $item['price'],
                 'subtotal' => $item['price'] * $item['quantity'],
+                'notes' => $item['notes'] ?? null,
             ]);
         }
 
@@ -188,4 +189,31 @@ class CheckoutController extends Controller
 
         return view('order-success', compact('order'));
     }
+
+    /**
+     * Cancel unpaid order
+     */
+    public function cancel($orderId)
+    {
+        $order = Order::findOrFail($orderId);
+
+        // Check if order belongs to current table session
+        if (!session()->has('table') || session('table.id') != $order->table_id) {
+            abort(403, 'Unauthorized access to this order.');
+        }
+
+        // Only allow cancellation of unpaid orders
+        if ($order->status !== 'unpaid') {
+            return redirect()->route('menu')->with('error', 'Cannot cancel this order. Order is already ' . $order->status . '.');
+        }
+
+        // Update order status to cancelled
+        $order->update(['status' => 'cancelled']);
+
+        // Delete order items
+        $order->orderItems()->delete();
+
+        return redirect()->route('menu')->with('success', 'Order cancelled successfully.');
+    }
 }
+

@@ -25,14 +25,17 @@ Route::get('/menu', [PublicController::class, 'menu'])->name('menu');
 Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::patch('/cart/{menuId}', [CartController::class, 'update'])->name('cart.update');
+Route::patch('/cart/{menuId}/note', [CartController::class, 'updateNote'])->name('cart.updateNote');
 Route::delete('/cart/{menuId}', [CartController::class, 'remove'])->name('cart.remove');
 Route::delete('/cart', [CartController::class, 'clear'])->name('cart.clear');
+Route::post('/cart/save-notes', [CartController::class, 'saveNotes'])->name('cart.saveNotes');
 
 // Checkout routes
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
 Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
 Route::get('/payment/{orderId}', [CheckoutController::class, 'payment'])->name('payment');
 Route::get('/order/success/{orderId}', [CheckoutController::class, 'success'])->name('order.success');
+Route::delete('/order/{orderId}/cancel', [CheckoutController::class, 'cancel'])->name('order.cancel');
 
 // Midtrans callback routes (no middleware, accessed by Midtrans server)
 Route::post('/midtrans/callback', [MidtransCallbackController::class, 'receive'])->name('midtrans.callback');

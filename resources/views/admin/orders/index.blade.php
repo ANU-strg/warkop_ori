@@ -124,4 +124,45 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+    // Auto-refresh every 10 seconds
+    let refreshInterval = setInterval(function() {
+        // Preserve current filters when refreshing
+        window.location.reload();
+    }, 10000); // 10 seconds
+
+    // Clear interval when user is about to leave the page
+    window.addEventListener('beforeunload', function() {
+        clearInterval(refreshInterval);
+    });
+
+    // Show last refresh time
+    function updateLastRefresh() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const refreshBadge = document.getElementById('lastRefresh');
+        if (refreshBadge) {
+            refreshBadge.textContent = 'Last refresh: ' + timeString;
+        }
+    }
+
+    // Update on page load
+    updateLastRefresh();
+
+    // Add refresh badge to page header
+    window.addEventListener('DOMContentLoaded', function() {
+        const pageHeader = document.querySelector('.space-y-6 > div:first-child');
+        if (pageHeader && !document.getElementById('lastRefresh')) {
+            const badge = document.createElement('div');
+            badge.className = 'text-sm text-gray-500 mt-1';
+            badge.id = 'lastRefresh';
+            pageHeader.querySelector('div').appendChild(badge);
+            updateLastRefresh();
+        }
+    });
+</script>
+@endpush
+
 @endsection

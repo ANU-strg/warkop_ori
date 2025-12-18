@@ -10,7 +10,7 @@ class TableController extends Controller
 {
     public function index()
     {
-        $tables = Table::latest()->paginate(10);
+        $tables = Table::orderByRaw('CAST(table_number AS UNSIGNED)')->paginate(10);
         return view('admin.tables.index', compact('tables'));
     }
 
@@ -22,8 +22,10 @@ class TableController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'table_number' => 'required|string|max:255|unique:tables,table_number',
+            'table_number' => 'required|numeric|min:1|unique:tables,table_number',
         ], [
+            'table_number.numeric' => 'Table number must be a number only.',
+            'table_number.min' => 'Table number must be at least 1.',
             'table_number.unique' => 'Table number already exists. Please use a different number.',
         ]);
 
@@ -48,8 +50,10 @@ class TableController extends Controller
     public function update(Request $request, Table $table)
     {
         $request->validate([
-            'table_number' => 'required|string|max:255|unique:tables,table_number,' . $table->id,
+            'table_number' => 'required|numeric|min:1|unique:tables,table_number,' . $table->id,
         ], [
+            'table_number.numeric' => 'Table number must be a number only.',
+            'table_number.min' => 'Table number must be at least 1.',
             'table_number.unique' => 'Table number already exists. Please use a different number.',
         ]);
 

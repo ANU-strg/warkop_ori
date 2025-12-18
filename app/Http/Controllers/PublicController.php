@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Menu;
 use App\Models\Table;
+use App\Models\Order;
 use Illuminate\Http\Request;
 
 class PublicController extends Controller
@@ -49,6 +50,13 @@ class PublicController extends Controller
         
         $tableInfo = session('table');
         
+        // Check for pending unpaid order for this table
+        $pendingOrder = Order::where('table_id', $tableInfo['id'])
+            ->where('status', 'unpaid')
+            ->where('payment_method', 'online')
+            ->orderBy('created_at', 'desc')
+            ->first();
+        
         // Get all categories with their available menus
         $categories = Category::with(['menus' => function($query) {
             $query->where('is_available', true)->orderBy('name');
@@ -58,6 +66,6 @@ class PublicController extends Controller
         $cart = session('cart', []);
         $cartCount = array_sum(array_column($cart, 'quantity'));
         
-        return view('menu', compact('tableInfo', 'categories', 'cart', 'cartCount'));
+        return view('menu', compact('tableInfo', 'categories', 'cart', 'cartCount', 'pendingOrder'));
     }
 }

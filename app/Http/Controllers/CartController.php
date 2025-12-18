@@ -50,6 +50,15 @@ class CartController extends Controller
         // Save cart to session
         session(['cart' => $cart]);
 
+        // Check if request is AJAX
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => "{$menu->name} added to cart!",
+                'cartCount' => array_sum(array_column($cart, 'quantity'))
+            ]);
+        }
+
         return back()->with('success', "{$menu->name} added to cart!");
     }
 
@@ -88,9 +97,48 @@ class CartController extends Controller
 
         if (isset($cart[$menuId])) {
             $cart[$menuId]['quantity'] = $request->quantity;
+            
             session(['cart' => $cart]);
             
+            // Check if request is AJAX
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Cart updated!',
+                    'cartCount' => array_sum(array_column($cart, 'quantity'))
+                ]);
+            }
+            
             return back()->with('success', 'Cart updated!');
+        }
+
+        // Check if request is AJAX
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Item not found in cart.'
+            ], 404);
+        }
+
+        return back()->with('error', 'Item not found in cart.');
+    }
+
+    /**
+     * Update notes for cart item
+     */
+    public function updateNote(Request $request, $menuId)
+    {
+        $request->validate([
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $cart = session('cart', []);
+
+        if (isset($cart[$menuId])) {
+            $cart[$menuId]['notes'] = $request->notes;
+            session(['cart' => $cart]);
+            
+            return back()->with('success', 'Note updated!');
         }
 
         return back()->with('error', 'Item not found in cart.');
@@ -99,7 +147,7 @@ class CartController extends Controller
     /**
      * Remove item from cart
      */
-    public function remove($menuId)
+    public function remove(Request $request, $menuId)
     {
         $cart = session('cart', []);
 
@@ -107,7 +155,24 @@ class CartController extends Controller
             unset($cart[$menuId]);
             session(['cart' => $cart]);
             
+            // Check if request is AJAX
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Item removed from cart!',
+                    'cartCount' => array_sum(array_column($cart, 'quantity'))
+                ]);
+            }
+            
             return back()->with('success', 'Item removed from cart!');
+        }
+
+        // Check if request is AJAX
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Item not found in cart.'
+            ], 404);
         }
 
         return back()->with('error', 'Item not found in cart.');
@@ -121,5 +186,27 @@ class CartController extends Controller
         session()->forget('cart');
         
         return back()->with('success', 'Cart cleared!');
+    }
+
+    /**
+     * Save notes for all cart items and redirect to checkout
+     */
+    public function saveNotes(Request $request)
+    {
+        $cart = session('cart', []);
+        $notes = $request->input('notes', []);
+
+        // Update notes for each item in cart
+        foreach ($notes as $menuId => $note) {
+            if (isset($cart[$menuId])) {
+                $cart[$menuId]['notes'] = $note ? trim($note) : null;
+            }
+        }
+
+        // Save updated cart to session
+        session(['cart' => $cart]);
+
+        // Redirect to checkout page
+        return redirect()->route('checkout');
     }
 }

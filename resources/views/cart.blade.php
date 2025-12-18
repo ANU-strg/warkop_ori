@@ -40,51 +40,75 @@
             <div class="space-y-4 mb-6">
                 @foreach($cart as $menuId => $item)
                     <div class="bg-white rounded-lg shadow-sm p-4">
-                        <div class="flex items-center">
+                        <div class="flex items-start gap-4">
                             <!-- Image -->
                             @if($item['image_path'] && file_exists(public_path($item['image_path'])))
-                                <img src="{{ asset($item['image_path']) }}" alt="{{ $item['name'] }}" class="w-20 h-20 object-cover rounded">
+                                <img src="{{ asset($item['image_path']) }}" alt="{{ $item['name'] }}" class="w-20 h-20 object-cover rounded flex-shrink-0">
                             @else
-                                <div class="w-20 h-20 bg-gray-200 rounded flex items-center justify-center">
+                                <div class="w-20 h-20 bg-gray-200 rounded flex items-center justify-center flex-shrink-0">
                                     <span class="text-gray-400 text-xs">No Image</span>
                                 </div>
                             @endif
                             
-                            <!-- Info -->
-                            <div class="flex-1 ml-4">
-                                <h3 class="font-semibold text-gray-800">{{ $item['name'] }}</h3>
-                                <p class="text-blue-600 font-medium">Rp {{ number_format($item['price'], 0, ',', '.') }}</p>
+                            <!-- Content -->
+                            <div class="flex-1 min-w-0">
+                                <!-- Header: Name & Price -->
+                                <div class="flex justify-between items-start mb-3">
+                                    <div>
+                                        <h3 class="font-semibold text-gray-800 text-lg">{{ $item['name'] }}</h3>
+                                        <p class="text-blue-600 font-medium mt-1">Rp {{ number_format($item['price'], 0, ',', '.') }}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-lg font-bold text-gray-800">
+                                            Rp {{ number_format($item['price'] * $item['quantity'], 0, ',', '.') }}
+                                        </p>
+                                    </div>
+                                </div>
                                 
-                                <!-- Quantity Controls -->
-                                <div class="flex items-center mt-2">
-                                    <form action="{{ route('cart.update', $menuId) }}" method="POST" class="inline">
-                                        @csrf
-                                        @method('PATCH')
-                                        <input type="hidden" name="quantity" value="{{ max(1, $item['quantity'] - 1) }}">
-                                        <button type="submit" class="bg-gray-200 text-gray-700 px-3 py-1 rounded-l hover:bg-gray-300">-</button>
-                                    </form>
+                                <!-- Notes Input -->
+                                <div class="mb-3">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Special Request</label>
+                                    <textarea 
+                                        id="note-{{ $menuId }}" 
+                                        name="notes[{{ $menuId }}]"
+                                        rows="2" 
+                                        placeholder="Add note (e.g., Pedas, bagian dada, es sedikit...)" 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                    >{{ $item['notes'] ?? '' }}</textarea>
+                                    <p class="text-xs text-gray-500 mt-1">💡 Note will be saved when you checkout</p>
+                                </div>
+                                
+                                <!-- Quantity Controls & Remove -->
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <form action="{{ route('cart.update', $menuId) }}" method="POST" class="inline">
+                                            @csrf
+                                            @method('PATCH')
+                                            <input type="hidden" name="quantity" value="{{ max(1, $item['quantity'] - 1) }}">
+                                            <button type="submit" 
+                                                    class="px-3 py-1 rounded-l transition-colors {{ $item['quantity'] <= 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}"
+                                                    {{ $item['quantity'] <= 1 ? 'disabled' : '' }}>
+                                                -
+                                            </button>
+                                        </form>
+                                        
+                                        <span class="bg-gray-100 px-4 py-1 text-gray-800 font-medium">{{ $item['quantity'] }}</span>
+                                        
+                                        <form action="{{ route('cart.update', $menuId) }}" method="POST" class="inline">
+                                            @csrf
+                                            @method('PATCH')
+                                            <input type="hidden" name="quantity" value="{{ $item['quantity'] + 1 }}">
+                                            <button type="submit" class="bg-gray-200 text-gray-700 px-3 py-1 rounded-r hover:bg-gray-300">+</button>
+                                        </form>
+                                    </div>
                                     
-                                    <span class="bg-gray-100 px-4 py-1 text-gray-800 font-medium">{{ $item['quantity'] }}</span>
-                                    
-                                    <form action="{{ route('cart.update', $menuId) }}" method="POST" class="inline">
+                                    <!-- Remove Button -->
+                                    <form action="{{ route('cart.remove', $menuId) }}" method="POST">
                                         @csrf
-                                        @method('PATCH')
-                                        <input type="hidden" name="quantity" value="{{ $item['quantity'] + 1 }}">
-                                        <button type="submit" class="bg-gray-200 text-gray-700 px-3 py-1 rounded-r hover:bg-gray-300">+</button>
+                                        @method('DELETE')
+                                        <button type="submit" class="text-red-600 hover:text-red-800 text-sm font-medium">Remove</button>
                                     </form>
                                 </div>
-                            </div>
-                            
-                            <!-- Subtotal & Remove -->
-                            <div class="text-right">
-                                <p class="text-lg font-bold text-gray-800 mb-2">
-                                    Rp {{ number_format($item['price'] * $item['quantity'], 0, ',', '.') }}
-                                </p>
-                                <form action="{{ route('cart.remove', $menuId) }}" method="POST">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-red-600 hover:text-red-800 text-sm">Remove</button>
-                                </form>
                             </div>
                         </div>
                     </div>
@@ -100,14 +124,17 @@
             </div>
 
             <!-- Checkout Button -->
-            <div class="flex space-x-2">
-                <a href="{{ route('menu') }}" class="flex-1 bg-gray-300 text-gray-700 px-6 py-3 rounded-lg text-center font-medium hover:bg-gray-400">
-                    Add More Items
-                </a>
-                <a href="{{ route('checkout') }}" class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg text-center font-medium hover:bg-blue-700">
-                    Proceed to Checkout
-                </a>
-            </div>
+            <form id="checkout-form" method="POST" action="{{ route('cart.saveNotes') }}">
+                @csrf
+                <div class="flex space-x-2">
+                    <a href="{{ route('menu') }}" class="flex-1 bg-gray-300 text-gray-700 px-6 py-3 rounded-lg text-center font-medium hover:bg-gray-400">
+                        Add More Items
+                    </a>
+                    <button type="submit" class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg text-center font-medium hover:bg-blue-700">
+                        Proceed to Checkout
+                    </button>
+                </div>
+            </form>
         @else
             <div class="text-center py-12">
                 <svg class="mx-auto h-24 w-24 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -121,5 +148,21 @@
             </div>
         @endif
     </div>
+
+    <script>
+        // Collect notes before checkout
+        document.getElementById('checkout-form').addEventListener('submit', function(e) {
+            // Get all textareas
+            const textareas = document.querySelectorAll('textarea[name^="notes"]');
+            textareas.forEach(textarea => {
+                // Create hidden input for each note
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = textarea.name;
+                input.value = textarea.value;
+                this.appendChild(input);
+            });
+        });
+    </script>
 </body>
 </html>
