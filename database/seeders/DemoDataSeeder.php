@@ -22,7 +22,8 @@ class DemoDataSeeder extends Seeder
             ['table_number' => '1'],
             ['table_number' => '2'],
             ['table_number' => '3'],
-            ['table_number' => 'VIP-1'],
+            ['table_number' => '4'],
+            ['table_number' => '5'],
         ];
 
         foreach ($tables as $tableData) {

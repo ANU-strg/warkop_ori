@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\TableController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\MidtransCallbackController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicController;
 use Illuminate\Support\Facades\Route;
@@ -33,6 +34,12 @@ Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('
 Route::get('/payment/{orderId}', [CheckoutController::class, 'payment'])->name('payment');
 Route::get('/order/success/{orderId}', [CheckoutController::class, 'success'])->name('order.success');
 
+// Midtrans callback routes (no middleware, accessed by Midtrans server)
+Route::post('/midtrans/callback', [MidtransCallbackController::class, 'receive'])->name('midtrans.callback');
+Route::get('/midtrans/finish', [MidtransCallbackController::class, 'finish'])->name('midtrans.finish');
+Route::get('/midtrans/unfinish', [MidtransCallbackController::class, 'unfinish'])->name('midtrans.unfinish');
+Route::get('/midtrans/error', [MidtransCallbackController::class, 'error'])->name('midtrans.error');
+
 // Admin routes (protected by auth middleware)
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -50,6 +57,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+    Route::post('/orders/{order}/mark-paid', [OrderController::class, 'markAsPaid'])->name('orders.markPaid');
 });
 
 // Breeze default auth routes

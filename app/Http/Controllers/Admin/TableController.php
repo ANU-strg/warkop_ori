@@ -22,7 +22,9 @@ class TableController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'table_number' => 'required|string|max:255',
+            'table_number' => 'required|string|max:255|unique:tables,table_number',
+        ], [
+            'table_number.unique' => 'Table number already exists. Please use a different number.',
         ]);
 
         Table::create([
@@ -46,7 +48,9 @@ class TableController extends Controller
     public function update(Request $request, Table $table)
     {
         $request->validate([
-            'table_number' => 'required|string|max:255',
+            'table_number' => 'required|string|max:255|unique:tables,table_number,' . $table->id,
+        ], [
+            'table_number.unique' => 'Table number already exists. Please use a different number.',
         ]);
 
         $table->update([

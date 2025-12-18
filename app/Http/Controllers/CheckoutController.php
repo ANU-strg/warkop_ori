@@ -41,6 +41,11 @@ class CheckoutController extends Controller
      */
     public function process(Request $request)
     {
+        // Validate payment method
+        $request->validate([
+            'payment_method' => 'required|in:online,cash',
+        ]);
+
         // Check if table session exists
         if (!session()->has('table')) {
             return redirect()->route('home')->with('error', 'Please scan a QR code first.');
@@ -67,7 +72,8 @@ class CheckoutController extends Controller
         $order = Order::create([
             'table_id' => $tableInfo['id'],
             'transaction_id' => $transactionId,
-            'status' => 'pending',
+            'status' => 'unpaid',
+            'payment_method' => $request->payment_method,
             'total_amount' => $totalAmount,
         ]);
 
@@ -82,7 +88,16 @@ class CheckoutController extends Controller
             ]);
         }
 
-        // Get Midtrans Snap Token (we'll implement this next)
+        // If payment method is cash, redirect directly to success page
+        if ($request->payment_method === 'cash') {
+            // Clear cart
+            session()->forget('cart');
+            
+            return redirect()->route('order.success', $order->id)
+                ->with('info', 'Please pay at the cashier counter.');
+        }
+
+        // For online payment, get Midtrans Snap Token
         $snapToken = $this->getSnapToken($order);
         
         // Update order with snap token
@@ -103,8 +118,8 @@ class CheckoutController extends Controller
         // Set Midtrans configuration
         \Midtrans\Config::$serverKey = config('services.midtrans.server_key');
         \Midtrans\Config::$isProduction = config('services.midtrans.is_production', false);
-        \Midtrans\Config::$isSanitized = true;
-        \Midtrans\Config::$is3ds = true;
+        \Midtrans\Config::$isSanitized = config('services.midtrans.is_sanitized', true);
+        \Midtrans\Config::$is3ds = config('services.midtrans.is_3ds', true);
 
         $params = [
             'transaction_details' => [
@@ -116,6 +131,11 @@ class CheckoutController extends Controller
                 'email' => 'customer@warkop.com',
             ],
             'item_details' => [],
+            'callbacks' => [
+                'finish' => route('midtrans.finish'),
+                'unfinish' => route('midtrans.unfinish'),
+                'error' => route('midtrans.error'),
+            ],
         ];
 
         // Add order items
@@ -132,6 +152,8 @@ class CheckoutController extends Controller
             $snapToken = \Midtrans\Snap::getSnapToken($params);
             return $snapToken;
         } catch (\Exception $e) {
+            // Log error for debugging
+            \Log::error('Midtrans Error: ' . $e->getMessage());
             // If Midtrans fails, return dummy token for testing
             return 'dummy-token-' . time();
         }

@@ -49,7 +49,12 @@
             @if($order->snap_token && !str_starts_with($order->snap_token, 'dummy'))
                 snap.pay('{{ $order->snap_token }}', {
                     onSuccess: function(result){
-                        window.location.href = '{{ route("order.success", $order->id) }}';
+                        // Update status via AJAX before redirect
+                        fetch('{{ route("midtrans.finish") }}?order_id={{ $order->transaction_id }}', {
+                            method: 'GET'
+                        }).then(() => {
+                            window.location.href = '{{ route("order.success", $order->id) }}';
+                        });
                     },
                     onPending: function(result){
                         window.location.href = '{{ route("order.success", $order->id) }}';

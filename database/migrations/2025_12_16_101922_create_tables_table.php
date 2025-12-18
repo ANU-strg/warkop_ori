@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('tables', function (Blueprint $table) {
             $table->id();
             $table->string('uuid')->unique();
-            $table->string('table_number');
+            $table->string('table_number')->unique(); // Make table_number unique
             $table->string('qr_code_image_path')->nullable();
             $table->timestamps();
         });

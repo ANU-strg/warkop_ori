@@ -44,14 +44,49 @@ class OrderController extends Controller
      */
     public function updateStatus(Request $request, Order $order)
     {
-        $request->validate([
-            'status' => 'required|in:pending,paid,completed',
-        ]);
+        // Block manual update for online payment
+        if ($order->payment_method === 'online') {
+            return back()->with('error', 'Cannot manually update status for online payments. Status is managed by Midtrans automatically.');
+        }
 
-        $order->update([
-            'status' => $request->status,
-        ]);
+        // For cash payment, only allow unpaid/paid status
+        if ($order->payment_method === 'cash') {
+            $request->validate([
+                'status' => 'required|in:unpaid,paid',
+            ]);
+        }
+
+        $data = ['status' => $request->status];
+        
+        // If marking as paid, record the paid timestamp
+        if ($request->status === 'paid' && $order->status !== 'paid') {
+            $data['paid_at'] = now();
+        }
+
+        $order->update($data);
 
         return back()->with('success', 'Order status updated successfully!');
+    }
+
+    /**
+     * Mark cash order as paid (for cashier)
+     */
+    public function markAsPaid(Order $order)
+    {
+        // Only allow for cash payments that are unpaid
+        if ($order->payment_method !== 'cash') {
+            return back()->with('error', 'This order is not a cash payment!');
+        }
+
+        if ($order->status === 'paid') {
+            return back()->with('info', 'Order is already marked as paid.');
+        }
+
+        $order->update([
+            'status' => 'paid',
+            'paid_at' => now(),
+        ]);
+
+        return back()->with('success', 'Order marked as paid successfully!');
     }
 }

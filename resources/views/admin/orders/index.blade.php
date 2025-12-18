@@ -21,9 +21,12 @@
             <div class="min-w-[150px]">
                 <select name="status" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                     <option value="">All Status</option>
-                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                    <option value="unpaid" {{ request('status') == 'unpaid' ? 'selected' : '' }}>Unpaid</option>
                     <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>Paid</option>
+                    <option value="preparing" {{ request('status') == 'preparing' ? 'selected' : '' }}>Preparing</option>
+                    <option value="ready" {{ request('status') == 'ready' ? 'selected' : '' }}>Ready</option>
                     <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completed</option>
+                    <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                 </select>
             </div>
             <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
@@ -47,6 +50,7 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Table</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Items</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -69,19 +73,37 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                            {{ $order->payment_method === 'cash' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' }}">
+                                            {{ $order->payment_method === 'cash' ? 'Cash' : 'Online' }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
                                             {{ $order->status === 'completed' ? 'bg-green-100 text-green-800' : '' }}
-                                            {{ $order->status === 'paid' ? 'bg-blue-100 text-blue-800' : '' }}
-                                            {{ $order->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : '' }}">
+                                            {{ $order->status === 'ready' ? 'bg-blue-100 text-blue-800' : '' }}
+                                            {{ $order->status === 'preparing' ? 'bg-purple-100 text-purple-800' : '' }}
+                                            {{ $order->status === 'paid' ? 'bg-teal-100 text-teal-800' : '' }}
+                                            {{ $order->status === 'unpaid' ? 'bg-yellow-100 text-yellow-800' : '' }}
+                                            {{ $order->status === 'cancelled' ? 'bg-red-100 text-red-800' : '' }}">
                                             {{ ucfirst($order->status) }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         {{ $order->created_at->format('d M Y, H:i') }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                         <a href="{{ route('admin.orders.show', $order) }}" class="text-blue-600 hover:text-blue-900">
-                                            View Details
+                                            View
                                         </a>
+                                        @if($order->payment_method === 'cash' && $order->status === 'unpaid')
+                                            <form action="{{ route('admin.orders.markPaid', $order) }}" method="POST" class="inline">
+                                                @csrf
+                                                <button type="submit" class="text-green-600 hover:text-green-900" 
+                                                        onclick="return confirm('Mark this order as paid?')">
+                                                    Mark Paid
+                                                </button>
+                                            </form>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach

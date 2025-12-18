@@ -31,14 +31,20 @@
                     <span class="font-semibold">{{ $order->table->table_number }}</span>
                 </div>
                 <div class="flex justify-between items-center mb-3">
-                    <span class="text-sm text-gray-600">Status</span>
-                    <span class="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full">
-                        {{ ucfirst($order->status) }}
+                    <span class="text-sm text-gray-600">Payment Method</span>
+                    <span class="px-3 py-1 {{ $order->payment_method === 'cash' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' }} text-xs font-semibold rounded-full">
+                        {{ $order->payment_method === 'cash' ? 'Cash' : 'Online' }}
+                    </span>
+                </div>
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-sm text-gray-600">Payment Status</span>
+                    <span class="px-3 py-1 {{ $order->status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }} text-xs font-semibold rounded-full">
+                        {{ $order->status === 'paid' ? 'Paid' : 'Unpaid' }}
                     </span>
                 </div>
                 <div class="border-t pt-3 mt-3">
                     <div class="flex justify-between items-center">
-                        <span class="text-gray-800 font-bold">Total Paid</span>
+                        <span class="text-gray-800 font-bold">Total Amount</span>
                         <span class="text-xl font-bold text-green-600">Rp {{ number_format($order->total_amount, 0, ',', '.') }}</span>
                     </div>
                 </div>
@@ -59,11 +65,28 @@
 
             <!-- Actions -->
             <div class="space-y-3">
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
-                    <p class="text-sm text-blue-800">
-                        <strong>Please wait at your table.</strong> Your order will be prepared and served shortly.
-                    </p>
-                </div>
+                @if($order->payment_method === 'cash' && $order->status === 'unpaid')
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-left">
+                        <div class="flex items-start">
+                            <svg class="w-5 h-5 text-yellow-600 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                            </svg>
+                            <div>
+                                <p class="text-sm font-semibold text-yellow-800 mb-1">Payment Pending</p>
+                                <p class="text-sm text-yellow-700">
+                                    Please proceed to the cashier counter to complete your payment.
+                                    Show this order ID: <strong>{{ $order->transaction_id }}</strong>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
+                        <p class="text-sm text-blue-800">
+                            <strong>Please wait at your table.</strong> Your order will be prepared and served shortly.
+                        </p>
+                    </div>
+                @endif
                 
                 <a href="{{ route('menu') }}" class="block w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700">
                     Order More Items

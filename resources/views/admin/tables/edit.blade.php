@@ -21,13 +21,14 @@
                 @method('PUT')
                 
                 <div class="mb-6">
-                    <label for="table_number" class="block text-sm font-medium text-gray-700 mb-2">Table Number</label>
+                    <label for="table_number" class="block text-sm font-medium text-gray-700 mb-2">Table Number *</label>
                     <input type="text" name="table_number" id="table_number" 
                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('table_number') border-red-500 @enderror"
                            value="{{ old('table_number', $table->table_number) }}" required>
                     @error('table_number')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
+                    <p class="mt-1 text-sm text-gray-500">Must be unique across all tables</p>
                 </div>
 
                 <div class="flex items-center justify-end space-x-2">
